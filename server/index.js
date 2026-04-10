@@ -1,14 +1,15 @@
 const express = require('express');
 const cors = require('cors');
-const { GoogleGenAI } = require('@google/generative-ai'); 
+const GoogleAI = require('@google/generative-ai'); // Use the whole object to be safe
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. Initialize AI with the correct 2026 SDK Syntax
-const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
+// 1. Initialize AI with the correct constructor path
+// This fixes the "GoogleGenAI is not a constructor" error
+const genAI = new GoogleAI.GoogleGenAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ 
   model: "gemini-1.5-flash",
   generationConfig: { responseMimeType: "application/json" }
@@ -26,7 +27,7 @@ app.get('/', (req, res) => {
   res.send('🛰️ CrisisProof Engine is Online and Encrypted.');
 });
 
-// 3. Main Analysis Route (For single headline search)
+// 3. Main Analysis Route
 app.post('/analyze', async (req, res) => {
   try {
     const { headline } = req.body;
@@ -46,7 +47,8 @@ app.post('/analyze', async (req, res) => {
     }`;
 
     const result = await model.generateContent(prompt);
-    res.json({ success: true, headline, analysis: JSON.parse(result.response.text()) });
+    const response = await result.response;
+    res.json({ success: true, headline, analysis: JSON.parse(response.text()) });
   } catch (error) {
     console.error("Analysis Error:", error);
     res.status(500).json({ success: false, error: error.message });
@@ -60,8 +62,9 @@ app.get('/analyze-feed', async (req, res) => {
     for (const headline of SAMPLE_HEADLINES) {
       const prompt = `Quick supply chain risk JSON for: ${headline}`;
       const result = await model.generateContent(prompt);
-      results.push({ headline, analysis: JSON.parse(result.response.text()) });
-      await new Promise(r => setTimeout(r, 800)); // Slight delay for rate limits
+      const response = await result.response;
+      results.push({ headline, analysis: JSON.parse(response.text()) });
+      await new Promise(r => setTimeout(r, 1000)); // Safer delay for free tier
     }
     res.json({ success: true, results });
   } catch (error) {
@@ -69,7 +72,7 @@ app.get('/analyze-feed', async (req, res) => {
   }
 });
 
-// 5. Community & Whistleblower (The "Extras" for the hackathon)
+// 5. Community & Whistleblower
 app.post('/community-report', (req, res) => {
   const { report, region, commodity } = req.body;
   res.json({ success: true, id: Date.now(), report, region, commodity, upvotes: 0, timestamp: new Date().toISOString() });
