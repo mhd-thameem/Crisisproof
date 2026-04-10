@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-// 1. Change this specific line to import the WHOLE object
 const GoogleAI = require('@google/generative-ai'); 
 require('dotenv').config();
 
@@ -8,8 +7,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 2. Access the class through the object. This BYPASSES the constructor error.
-const genAI = new GoogleAI.GoogleGenAI(process.env.GEMINI_API_KEY);
+// --- THE FALLBACK LOGIC ---
+// This looks in every possible place for the constructor to stop the TypeError
+let GoogleGenAI;
+if (GoogleAI.GoogleGenAI) {
+    GoogleGenAI = GoogleAI.GoogleGenAI;
+} else if (GoogleAI.default && GoogleAI.default.GoogleGenAI) {
+    GoogleGenAI = GoogleAI.default.GoogleGenAI;
+} else {
+    GoogleGenAI = GoogleAI;
+}
+
+const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ 
   model: "gemini-1.5-flash",
   generationConfig: { responseMimeType: "application/json" }
@@ -22,8 +31,7 @@ const SAMPLE_HEADLINES = [
   "Indonesia bans palm oil exports citing domestic shortage"
 ];
 
-// --- EVERYTHING ELSE STAYS THE SAME ---
-
+// --- ROUTES ---
 app.get('/', (req, res) => {
   res.send('🛰️ CrisisProof Engine is Online and Encrypted.');
 });
@@ -32,8 +40,7 @@ app.get('/analyze-feed', async (req, res) => {
   try {
     const results = [];
     for (const headline of SAMPLE_HEADLINES) {
-      const prompt = `Quick supply chain risk JSON for: ${headline}`;
-      const result = await model.generateContent(prompt);
+      const result = await model.generateContent(`Analyze this: ${headline}`);
       const response = await result.response;
       results.push({ headline, analysis: JSON.parse(response.text()) });
       await new Promise(r => setTimeout(r, 1000)); 
@@ -47,14 +54,14 @@ app.get('/analyze-feed', async (req, res) => {
 app.post('/analyze', async (req, res) => {
   try {
     const { headline } = req.body;
-    const result = await model.generateContent(`Analyze: ${headline}`);
+    const result = await model.generateContent(`Detailed analysis for: ${headline}`);
     const response = await result.response;
     res.json({ success: true, analysis: JSON.parse(response.text()) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/community-report', (req, res) => {
-  res.json({ success: true, timestamp: new Date().toISOString() });
+  res.json({ success: true, id: `REP-${Date.now()}` });
 });
 
 app.post('/whistleblower', (req, res) => {
