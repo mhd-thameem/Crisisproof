@@ -1,16 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-const googleAI = require('@google/generative-ai'); 
+// THIS IS THE CRITICAL CHANGE:
+const { GoogleGenAI } = require('@google/generative-ai'); 
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// This is the "Safety Net" initialization
-const GoogleGenAI = googleAI.GoogleGenAI || googleAI; 
+// 1. Initialize AI
+// We use the destructured GoogleGenAI directly.
 const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY);
-
 const model = genAI.getGenerativeModel({ 
   model: "gemini-1.5-flash",
   generationConfig: { responseMimeType: "application/json" }
