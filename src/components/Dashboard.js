@@ -25,27 +25,23 @@ export default function Dashboard() {
   };
 
 const analyze = async () => {
-    if (!headline.trim()) return;
-    setLoading(true);
-    setSystemPulse('processing');
-    try {
-      // FIX: Changed from localhost to your Render link
-      const res = await fetch('https://crisisproof.onrender.com/analyze-feed'); 
-      const data = await res.json();
-      
-      if (data.success) {
-        // We use the first result from the feed for the "Decrypt" result
-        setResult(data.feed[0].analysis); 
-        setFeed(data.feed);
-        showToast('Gemini Intelligence Synced');
-        setSystemPulse('online');
-      }
-    } catch (e) {
-      showToast('Neural Link Error');
-      setSystemPulse('error');
+  if (!headline.trim()) return;
+  setLoading(true);
+  try {
+    const res = await fetch('https://crisisproof.onrender.com/analyze-feed');
+    const data = await res.json();
+    
+    if (data.success && data.feed.length > 0) {
+      // Pick the first AI analysis from the feed to show in the big result box
+      setResult(data.feed[0].analysis); 
+      setFeed(data.feed);
+      setSystemPulse('online');
     }
-    setLoading(false);
-  };
+  } catch (e) {
+    setSystemPulse('error');
+  }
+  setLoading(false);
+};
 
  const loadFeed = async () => {
     setFeedLoading(true);
