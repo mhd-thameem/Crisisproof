@@ -24,21 +24,19 @@ export default function Dashboard() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const analyze = async () => {
+const analyze = async () => {
     if (!headline.trim()) return;
     setLoading(true);
     setSystemPulse('processing');
     try {
-      const res = await fetch('https://crisisproof.onrender.com/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ headline }),
-      });
+      // FIX: Changed from localhost to your Render link
+      const res = await fetch('https://crisisproof.onrender.com/analyze-feed'); 
       const data = await res.json();
+      
       if (data.success) {
-        setResult(data.analysis);
-        // Push the new analysis to the top of the feed automatically
-        setFeed(prev => [{ headline, analysis: data.analysis }, ...prev]);
+        // We use the first result from the feed for the "Decrypt" result
+        setResult(data.feed[0].analysis); 
+        setFeed(data.feed);
         showToast('Gemini Intelligence Synced');
         setSystemPulse('online');
       }
@@ -49,17 +47,21 @@ export default function Dashboard() {
     setLoading(false);
   };
 
-  const loadFeed = async () => {
+ const loadFeed = async () => {
     setFeedLoading(true);
     try {
-      const res = await fetch('https://crisisproof-backend.onrender.com/analyze', { method: 'POST' });
+      // FIX: Corrected URL and changed method to GET to match your backend
+      const res = await fetch('https://crisisproof.onrender.com/analyze-feed');
       const data = await res.json();
+      
       if (data.success) {
-        setFeed(data.results);
+        setFeed(data.feed); // FIX: Changed 'results' to 'feed'
         showToast('Global Feed Decrypted');
+        setSystemPulse('online');
       }
     } catch (e) {
       showToast('Satellite Feed Offline');
+      setSystemPulse('error');
     }
     setFeedLoading(false);
   };
