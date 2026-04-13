@@ -1,95 +1,58 @@
 import express from 'express';
 import cors from 'cors';
-// THE TYPO IS FIXED HERE: GoogleGenerativeAI
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
 const app = express();
+const port = process.env.PORT || 10000;
+
+// 1. IMPORTANT: Keep this open so Vercel can talk to you
 app.use(cors());
 app.use(express.json());
 
-console.log(`
--------------------------------------------------------
-  CRISISPROOF: BACKEND LOGIC STANDING BY
-  NODE VERSION: ${process.version}
-  STATUS: INITIALIZING AI PIPELINES...
--------------------------------------------------------
-`);
-
-// THE TYPO IS FIXED HERE TOO: new GoogleGenerativeAI
+// 2. Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ 
-  model: "gemini-3.1-flash-lite-preview",
-  generationConfig: { 
-    responseMimeType: "application/json",
-    temperature: 0.15 
-  }
-});
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+// 3. Your News Data
 const GLOBAL_FEED = [
-  "Iran threatens to close Strait of Hormuz amid escalating US tensions",
-  "Houthi attacks on Red Sea shipping routes intensify, major carriers reroute",
-  "Russia halts fertilizer exports amid ongoing Ukraine conflict",
-  "Indonesia bans palm oil exports citing domestic shortage",
-  "Severe drought in Panama Canal slows down global shipping traffic"
+  "Strait of Hormuz tension spikes oil transit risks",
+  "Port strike in Mundra delays electronics shipments",
+  "Semiconductor shortage hits Maharashtra automotive hub"
 ];
 
-const COMMUNITY_SIGNALS = [];
-
-// --- ROUTES ---
-
-app.get('/', (req, res) => {
-  res.status(200).json({
-    status: "online",
-    engine: "CrisisProof Core",
-    timestamp: new Date().toISOString(),
-    features: ["Risk Analysis", "Feed Scan", "Community Reporting", "Encrypted Whistleblowing"]
-  });
-});
-
+// 4. The "Safe" Route (Fixed for 429 errors)
 app.get('/analyze-feed', async (req, res) => {
-  console.log("🛰️  Scanning Global Signals...");
+  console.log("🛰️  Starting Global Scan...");
   try {
     const analysisResults = [];
-    for (const headline of GLOBAL_FEED) {
-      const prompt = `Evaluate for Indian Supply Chain Stability: "${headline}". JSON: {"isRisk":boolean, "commodity":"fuel|food|medicine|none", "severity":"low|medium|high", "logicChain":"<30 words", "confidence":number}`;
+    
+    // We only scan 2 items to stay under the 15-request-per-minute limit
+    for (const headline of GLOBAL_FEED.slice(0, 2)) {
+      const prompt = `Quick supply chain risk scan for: "${headline}". Respond in 1 sentence of pure JSON logic: {"isRisk":true, "severity":"high", "impact":"brief description"}`;
+      
       const result = await model.generateContent(prompt);
-      analysisResults.push({ headline, analysis: JSON.parse(result.response.text()) });
-      await new Promise(r => setTimeout(r, 1000));
+      const text = result.response.text();
+      
+      analysisResults.push({ headline, analysis: JSON.parse(text) });
+      
+      // Wait 4 seconds between requests to be safe
+      await new Promise(r => setTimeout(r, 4000));
     }
-    res.json({ success: true, count: analysisResults.length, feed: analysisResults });
+
+    res.json({ success: true, feed: analysisResults });
   } catch (error) {
-    res.status(500).json({ success: false, error: "AI Inference Failure", details: error.message });
+    console.error("❌ Error:", error.message);
+    res.status(500).json({ success: false, error: "AI logic failed" });
   }
 });
 
-app.post('/analyze', async (req, res) => {
-  const { headline } = req.body;
-  if (!headline) return res.status(400).json({ error: "No input signal provided." });
-  try {
-    const prompt = `Risk scan: "${headline}". JSON: { "riskScore": number, "primaryThreat": "string", "mitigationLogic": "string" }`;
-    const result = await model.generateContent(prompt);
-    res.json({ success: true, input: headline, data: JSON.parse(result.response.text()) });
-  } catch (error) {
-    res.status(500).json({ success: false, error: "Analysis Pipeline Offline" });
-  }
-});
+// 5. Basic Health Check
+app.get('/', (req, res) => res.send("CrisisProof Backend is ONLINE"));
 
-app.post('/community-report', (req, res) => {
-  const { report, region, commodity, observedSeverity } = req.body;
-  const signalEntry = { id: `SIG-${Date.now()}`, report, region, commodity, severity: observedSeverity || "medium", timestamp: new Date().toISOString() };
-  COMMUNITY_SIGNALS.push(signalEntry);
-  res.status(201).json({ success: true, signalEntry });
-});
-
-app.get('/community-reports', (req, res) => res.json({ success: true, data: COMMUNITY_SIGNALS }));
-
-app.post('/whistleblower', (req, res) => {
-  res.json({ success: true, caseId: `WB-${Date.now()}`, status: "Encrypted & Queued" });
-});
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 CRISISPROOF LOGIC ENGINE IS LIVE ON PORT ${PORT}`);
+// 6. Start the Engine
+app.listen(port, () => {
+  console.log(`🚀 Server screaming at http://localhost:${port}`);
 });
