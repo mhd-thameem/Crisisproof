@@ -8,51 +8,59 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 10000;
 
-// 1. IMPORTANT: Keep this open so Vercel can talk to you
 app.use(cors());
 app.use(express.json());
 
-// 2. Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// 3. Your News Data
+// Use gemini-1.5-flash for the best balance of speed and stability
+const model = genAI.getGenerativeModel({ 
+  model: "gemini-1.5-flash",
+  safetySettings: [
+    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+  ]
+});
+
 const GLOBAL_FEED = [
-  "Strait of Hormuz tension spikes oil transit risks",
-  "Port strike in Mundra delays electronics shipments",
-  "Semiconductor shortage hits Maharashtra automotive hub"
+  "Iran threatens to close Strait of Hormuz amid escalating US tensions",
+  "Houthi attacks on Red Sea shipping routes intensify",
+  "Severe drought in Panama Canal slows down global shipping traffic"
 ];
 
-// 4. The "Safe" Route (Fixed for 429 errors)
+// This matches your React's fetch('https://crisisproof.onrender.com/analyze-feed')
 app.get('/analyze-feed', async (req, res) => {
-  console.log("🛰️  Starting Global Scan...");
+  console.log("🛰️  Satellite Link Established. Scanning Global Feed...");
   try {
     const analysisResults = [];
-    
-    // We only scan 2 items to stay under the 15-request-per-minute limit
-    for (const headline of GLOBAL_FEED.slice(0, 2)) {
-      const prompt = `Quick supply chain risk scan for: "${headline}". Respond in 1 sentence of pure JSON logic: {"isRisk":true, "severity":"high", "impact":"brief description"}`;
+
+    for (const headline of GLOBAL_FEED) {
+      const prompt = `Perform a supply chain risk analysis for India based on: "${headline}". 
+      Respond ONLY with a JSON object. No extra text or markdown.
+      Structure: {"isRisk":true, "commodity":"string", "severity":"high/medium/low", "timeline":"string", "reason":"string", "confidence":95, "affectedRegions":["State1", "State2"]}`;
       
       const result = await model.generateContent(prompt);
       const text = result.response.text();
-      
-      analysisResults.push({ headline, analysis: JSON.parse(text) });
-      
-      // Wait 4 seconds between requests to be safe
-      await new Promise(r => setTimeout(r, 4000));
+
+      // CLEANER: Find the JSON block even if Gemini adds markdown backticks
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        analysisResults.push({ headline, analysis: JSON.parse(jsonMatch[0]) });
+      }
+
+      // Wait 3 seconds between items to avoid the 429 Rate Limit error
+      await new Promise(r => setTimeout(r, 3000));
     }
 
     res.json({ success: true, feed: analysisResults });
   } catch (error) {
-    console.error("❌ Error:", error.message);
-    res.status(500).json({ success: false, error: "AI logic failed" });
+    console.error("❌ BACKEND ERROR:", error.message);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// 5. Basic Health Check
-app.get('/', (req, res) => res.send("CrisisProof Backend is ONLINE"));
+app.get('/', (req, res) => res.send("CrisisProof Intelligence Engine: ONLINE"));
 
-// 6. Start the Engine
-app.listen(port, () => {
-  console.log(`🚀 Server screaming at http://localhost:${port}`);
-});
+app.listen(port, () => console.log(`🚀 System active on port ${port}`));
