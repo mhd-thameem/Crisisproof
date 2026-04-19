@@ -1,115 +1,229 @@
 import React, { useState } from 'react';
 
+const API = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+const REGIONS = [
+  { name: 'Maharashtra', status: 'high' },
+  { name: 'Gujarat', status: 'high' },
+  { name: 'Karnataka', status: 'medium' },
+  { name: 'Tamil Nadu', status: 'medium' },
+  { name: 'Rajasthan', status: 'low' },
+  { name: 'Punjab', status: 'low' },
+];
+
 export default function Dashboard() {
   const [headline, setHeadline] = useState('');
   const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
   const [feed, setFeed] = useState([]);
-  const [systemPulse, setSystemPulse] = useState('online');
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [toast, setToast] = useState('');
+  const [error, setError] = useState('');
 
-  const RENDER_URL = 'https://crisisproof.onrender.com'; 
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
   const analyze = async () => {
     if (!headline.trim()) return;
     setLoading(true);
-    setSystemPulse('processing');
+    setResult(null);
+    setError('');
     try {
-      const res = await fetch(`${RENDER_URL}/analyze`, {
+      const res = await fetch(`${API}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ headline }),
       });
       const data = await res.json();
       if (data.success) {
-        setFeed(prev => [{ headline, analysis: data.analysis }, ...prev]);
-        setSystemPulse('online');
+        setResult(data.analysis);
+        showToast('Analysis complete');
+      } else {
+        setError(data.error || 'Analysis failed');
       }
-    } catch (e) { setSystemPulse('error'); } 
-    finally { setLoading(false); setHeadline(''); }
+    } catch (e) {
+      setError('Cannot reach server. Make sure backend is running.');
+    }
+    setLoading(false);
   };
 
   const loadFeed = async () => {
-    setLoading(true);
-    setSystemPulse('processing');
+    setFeedLoading(true);
     try {
-      const res = await fetch(`${RENDER_URL}/analyze-feed`);
+      const res = await fetch(`${API}/analyze-feed`, { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setFeed(data.data);
-        setSystemPulse('online');
+        setFeed(data.results);
+        showToast('Live feed updated');
       }
-    } catch (e) { setSystemPulse('error'); } 
-    finally { setLoading(false); }
+    } catch (e) {
+      showToast('Could not load feed');
+    }
+    setFeedLoading(false);
+  };
+
+  const getSeverityColor = (s) => {
+    if (s === 'high') return '#EF4444';
+    if (s === 'medium') return '#F59E0B';
+    return '#10B981';
   };
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
-        <h2>Strategic Intelligence Terminal</h2>
-        <div style={{display: 'flex', alignItems: 'center', marginTop: '8px'}}>
-          <span className={`status-dot ${systemPulse}`}></span>
-          <span style={{fontSize: '11px', fontWeight: '800', color: '#64748B', letterSpacing: '1px'}}>
-            SYS_STATUS: {systemPulse.toUpperCase()} | ENGINE: GEMINI 3.1 FLASH LITE
-          </span>
+    <div>
+      <div className="page-header">
+        <h2>Supply Chain Intelligence</h2>
+        <p>Real-time disruption monitoring for India's essential commodities</p>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card danger">
+          <div className="label">Active Threats</div>
+          <div className="value">{feed.filter(f => f.analysis?.severity === 'high').length || 2}</div>
+          <div className="change" style={{color:'#EF4444'}}>High severity</div>
         </div>
-      </header>
-
-      <div className="analysis-input-vault">
-        <input
-          className="cyber-input"
-          value={headline}
-          onChange={e => setHeadline(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && analyze()}
-          placeholder="INPUT GLOBAL SIGNAL FOR DECRYPTION (E.G. RED SEA DISRUPTION)..."
-        />
-        <button className="cyber-btn-primary" onClick={analyze} disabled={loading}>
-          {loading ? 'PROCESSING...' : 'DECRYPT SIGNAL'}
-        </button>
+        <div className="stat-card warning">
+          <div className="label">Watch Zones</div>
+          <div className="value">{feed.filter(f => f.analysis?.severity === 'medium').length || 3}</div>
+          <div className="change" style={{color:'#F59E0B'}}>Medium severity</div>
+        </div>
+        <div className="stat-card safe">
+          <div className="label">Regions Protected</div>
+          <div className="value">6</div>
+          <div className="change">Monitoring active</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Warning Window</div>
+          <div className="value">5-6w</div>
+          <div className="change">Before street impact</div>
+        </div>
       </div>
 
-      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
-        <h3 style={{fontSize: '0.8rem', letterSpacing: '3px', color: '#475569', fontWeight: '900'}}>GLOBAL RISK STREAM</h3>
-        <button className="cyber-btn-secondary" onClick={loadFeed} disabled={loading}>REFRESH SATELLITE FEED</button>
-      </div>
-
-      <div className="feed-grid">
-        {feed.length === 0 ? (
-          <div className="empty-terminal" style={{gridColumn: '1 / -1'}}>
-            <p>NO ACTIVE THREATS DETECTED IN LOCAL BUFFER</p>
-            <span style={{fontSize: '0.65rem', marginTop: '10px', display: 'block'}}>SYNC WITH GLOBAL DATA SOURCE TO POPULATE TERMINAL</span>
+      <div className="card analyze-section">
+        <div className="card-header">
+          <div>
+            <div className="card-title">Analyze Headline</div>
+            <div className="card-subtitle">Paste any global news headline for instant supply chain risk analysis</div>
           </div>
-        ) : (
-          feed.map((item, i) => {
-            const severity = item.analysis?.severity?.toUpperCase() || 'LOW';
-            const confidence = item.analysis?.confidence ? Math.round(item.analysis.confidence * 100) : 95;
-            
-            return (
-              <div key={i} className={`premium-risk-card border-${severity}`}>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem'}}>
-                  <span style={{fontSize: '10px', fontWeight: '900', color: '#00f2ff', background: 'rgba(0,242,255,0.1)', padding: '4px 8px', borderRadius: '4px'}}>
-                    {item.analysis?.commodity?.toUpperCase() || 'GENERAL'}
-                  </span>
-                  <span style={{fontSize: '10px', fontWeight: '900', color: severity === 'HIGH' ? '#ff4d4d' : '#00d2d3'}}>
-                    {severity} RISK
-                  </span>
-                </div>
-                <h4 style={{fontSize: '1.1rem', marginBottom: '12px', lineHeight: '1.3'}}>{item.headline}</h4>
-                <p style={{fontSize: '0.85rem', color: '#94a3b8', lineHeight: '1.5', marginBottom: '1.5rem'}}>
-                  {item.analysis?.logic || 'Contextualizing geopolitical ripple effects...'}
-                </p>
-                <div style={{borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                  <div>
-                    <div style={{fontSize: '9px', color: '#64748B', marginBottom: '4px'}}>AI CONFIDENCE: {confidence}%</div>
-                    <div style={{width: '120px', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden'}}>
-                      <div style={{width: `${confidence}%`, height: '100%', background: '#00f2ff'}}></div>
-                    </div>
-                  </div>
-                  <span style={{fontSize: '9px', fontWeight: '900', color: '#10B981'}}>VERIFIED DATA</span>
+        </div>
+        <div className="input-group">
+          <input
+            value={headline}
+            onChange={e => setHeadline(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && analyze()}
+            placeholder="e.g. Iran threatens to close Strait of Hormuz..."
+          />
+          <button className="btn btn-primary" onClick={analyze} disabled={loading || !headline.trim()}>
+            {loading ? <span className="loading-spinner" /> : 'Analyze'}
+          </button>
+        </div>
+
+        {error && (
+          <div style={{marginTop:'12px', padding:'12px', background:'#3D1515', borderRadius:'8px', color:'#EF4444', fontSize:'13px'}}>
+            {error}
+          </div>
+        )}
+
+        {result && (
+          <div className="result-card">
+            <h4>Analysis Result</h4>
+            <div className="result-grid">
+              <div className="result-item">
+                <div className="rlabel">Commodity</div>
+                <div className="rvalue">{result.commodity}</div>
+              </div>
+              <div className="result-item">
+                <div className="rlabel">Severity</div>
+                <div className="rvalue" style={{color: getSeverityColor(result.severity)}}>
+                  {result.severity?.toUpperCase()}
                 </div>
               </div>
-            );
-          })
+              <div className="result-item">
+                <div className="rlabel">Timeline</div>
+                <div className="rvalue">{result.timeline}</div>
+              </div>
+              <div className="result-item">
+                <div className="rlabel">Confidence</div>
+                <div className="rvalue">{result.confidence}%</div>
+              </div>
+              <div className="result-item" style={{gridColumn:'2 / -1'}}>
+                <div className="rlabel">Recommended Action</div>
+                <div className="rvalue" style={{fontSize:'13px', color:'#94A3B8'}}>{result.recommendedAction}</div>
+              </div>
+            </div>
+            <div className="confidence-bar">
+              <div className="confidence-fill" style={{width:`${result.confidence}%`}} />
+            </div>
+            <div style={{marginTop:'12px', fontSize:'13px', color:'#64748B'}}>{result.reason}</div>
+            {result.affectedRegions && (
+              <div className="regions-list">
+                {result.affectedRegions.map(r => <span key={r} className="region-tag">{r}</span>)}
+              </div>
+            )}
+          </div>
         )}
       </div>
+
+      <div className="grid-2">
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <div className="card-title">Live Disruption Feed</div>
+              <div className="card-subtitle">AI-analyzed global headlines</div>
+            </div>
+            <button className="btn btn-secondary" onClick={loadFeed} disabled={feedLoading}>
+              {feedLoading ? <span className="loading-spinner" /> : 'Refresh'}
+            </button>
+          </div>
+          {feed.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">📡</div>
+              <p>Click Refresh to load live analysis</p>
+            </div>
+          ) : (
+            feed.map((item, i) => (
+              <div key={i} className={`disruption-item ${item.analysis?.severity}`}>
+                <div className="disruption-headline">{item.headline}</div>
+                <div className="disruption-meta">
+                  <span className={`badge badge-${item.analysis?.severity}`}>{item.analysis?.severity}</span>
+                  <span className="meta-tag">{item.analysis?.commodity}</span>
+                  <span className="meta-tag">{item.analysis?.timeline}</span>
+                  <span className="meta-tag">{item.analysis?.confidence}% confidence</span>
+                </div>
+                <div className="confidence-bar" style={{marginTop:'8px'}}>
+                  <div className="confidence-fill" style={{width:`${item.analysis?.confidence}%`}} />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <div className="card-title">Regional Status</div>
+          </div>
+          <div className="map-container" style={{marginBottom:'16px'}}>
+            <div className="map-placeholder">
+              <div className="map-icon">🗺️</div>
+              <p>India Supply Chain Map</p>
+              <p style={{fontSize:'11px', marginTop:'4px', color:'#374151'}}>Google Maps integration on deployment</p>
+            </div>
+          </div>
+          <div className="region-indicators">
+            {REGIONS.map(r => (
+              <div key={r.name} className="region-row">
+                <span className="region-name">{r.name}</span>
+                <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
+                  <span style={{fontSize:'11px', color: r.status==='high'?'#EF4444':r.status==='medium'?'#F59E0B':'#10B981'}}>
+                    {r.status}
+                  </span>
+                  <div className={`status-dot ${r.status}`} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {toast && <div className="toast">{toast}</div>}
     </div>
   );
 }
