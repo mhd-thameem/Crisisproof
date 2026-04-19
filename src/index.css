@@ -1,6 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500&display=swap');
 
-/* --- 1. GLOBAL VARIABLES & RESET --- */
 :root {
   --bg-deep: #050b14;
   --bg-sidebar: #0D1B2E;
@@ -20,10 +19,9 @@ body {
   background: var(--bg-deep);
   color: #F1F5F9;
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
-/* --- 2. LAYOUT SYSTEM (Keeps your Sidebar intact) --- */
+/* --- 1. THE SKELETON (Restores your Layout) --- */
 .app { display: flex; min-height: 100vh; }
 
 .sidebar {
@@ -35,7 +33,6 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  z-index: 100;
 }
 
 .sidebar-logo { padding: 0 24px 32px; border-bottom: 1px solid var(--border-glass); }
@@ -72,15 +69,8 @@ body {
   background: radial-gradient(circle at top right, #0f172a, #020617);
 }
 
-/* --- 3. PREMIUM DASHBOARD COMPONENTS --- */
-.dashboard-header-premium {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 2.5rem;
-  border-bottom: 1px solid var(--border-glass);
-  padding-bottom: 1.5rem;
-}
+/* --- 2. PREMIUM DASHBOARD UI --- */
+.page-header h2 { font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
 
 .analysis-input-vault {
   display: flex;
@@ -89,7 +79,7 @@ body {
   padding: 24px;
   border-radius: 16px;
   border: 1px solid var(--border-glass);
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
   backdrop-filter: blur(10px);
 }
 
@@ -101,27 +91,9 @@ body {
   padding: 14px 18px;
   color: #fff;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
+  outline: none;
 }
 
-/* --- 4. THE GLASS-CARDS (The "Jewel" of the UI) --- */
-.premium-risk-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid var(--border-glass);
-  border-top: 4px solid var(--accent-cyan);
-  margin-bottom: 1rem;
-  transition: transform 0.3s ease;
-}
-
-.premium-risk-card:hover { transform: translateY(-5px); border-color: var(--accent-cyan); }
-.border-HIGH { border-top-color: var(--high-risk); }
-.border-MEDIUM { border-top-color: var(--med-risk); }
-.border-LOW { border-top-color: var(--low-risk); }
-
-/* --- 5. BUTTONS & ANIMATIONS --- */
 .cyber-btn-primary {
   background: var(--accent-cyan);
   color: #000;
@@ -131,14 +103,38 @@ body {
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+  transition: transform 0.2s;
 }
+
+.cyber-btn-primary:hover { transform: scale(1.05); }
+
+/* --- 3. THE RISK FEED (Glassmorphism) --- */
+.feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.premium-risk-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-glass);
+  border-top: 4px solid var(--accent-cyan);
+  transition: all 0.3s ease;
+}
+
+.premium-risk-card:hover { transform: translateY(-5px); border-color: var(--accent-cyan); }
+.border-HIGH { border-top-color: var(--high-risk); }
+.border-MEDIUM { border-top-color: var(--med-risk); }
+.border-LOW { border-top-color: var(--low-risk); }
+
+.headline-text { font-size: 1.2rem; font-weight: 700; margin: 12px 0; color: #fff; }
+.logic-description { color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; }
 
 .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
 .status-dot.online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
 .status-dot.scanning { background: var(--accent-cyan); animation: blink 1s infinite; }
 
 @keyframes blink { 50% { opacity: 0.3; } }
-
-/* --- 6. PAGE-SPECIFIC CLASSES (Keep your other features) --- */
-.whistle-card { background: #0F1D1F; border: 1px solid #10B98130; border-radius: 14px; padding: 20px; }
-.alert-banner-legendary { background: linear-gradient(90deg, #0F1D1F 0%, #162C2E 100%); border: 1px solid rgba(16, 185, 129, 0.3); padding: 20px; border-radius: 12px; }
