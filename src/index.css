@@ -1,15 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@500&display=swap');
 
 :root {
+  --neon-cyan: #00f2ff;
   --bg-deep: #050b14;
   --bg-sidebar: #0D1B2E;
   --bg-card: rgba(16, 25, 41, 0.8);
-  --accent-cyan: #00f2ff;
-  --high-risk: #ff4d4d;
-  --med-risk: #ff9f43;
-  --low-risk: #00d2d3;
-  --text-dim: #94a3b8;
   --border-glass: rgba(255, 255, 255, 0.1);
+  --text-dim: #94a3b8;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -17,124 +14,46 @@
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg-deep);
-  color: #F1F5F9;
-  min-height: 100vh;
-}
-
-/* --- 1. THE SKELETON (Restores your Layout) --- */
-.app { display: flex; min-height: 100vh; }
-
-.sidebar {
-  width: 240px;
-  background: var(--bg-sidebar);
-  border-right: 1px solid var(--border-glass);
-  padding: 24px 0;
-  position: fixed;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.sidebar-logo { padding: 0 24px 32px; border-bottom: 1px solid var(--border-glass); }
-.sidebar-logo h1 { font-size: 20px; font-weight: 900; color: var(--accent-cyan); letter-spacing: -0.5px; }
-.sidebar-logo p { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
-
-.sidebar-nav { padding: 24px 12px; flex: 1; }
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  color: var(--text-dim);
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s;
-  margin-bottom: 4px;
-  border: none;
-  background: none;
-  width: 100%;
-}
-
-.nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-.nav-item.active { background: rgba(0, 242, 255, 0.1); color: var(--accent-cyan); border-right: 3px solid var(--accent-cyan); }
-
-.main-content {
-  margin-left: 240px;
-  flex: 1;
-  padding: 40px;
-  min-height: 100vh;
-  background: radial-gradient(circle at top right, #0f172a, #020617);
-}
-
-/* --- 2. PREMIUM DASHBOARD UI --- */
-.page-header h2 { font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
-
-.analysis-input-vault {
-  display: flex;
-  gap: 16px;
-  background: var(--bg-card);
-  padding: 24px;
-  border-radius: 16px;
-  border: 1px solid var(--border-glass);
-  margin-bottom: 3rem;
-  backdrop-filter: blur(10px);
-}
-
-.cyber-input {
-  flex: 1;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border-glass);
-  border-radius: 8px;
-  padding: 14px 18px;
   color: #fff;
-  font-family: 'JetBrains Mono', monospace;
-  outline: none;
 }
 
+/* Sidebar & Layout */
+.app { display: flex; min-height: 100vh; }
+.sidebar { width: 240px; background: var(--bg-sidebar); border-right: 1px solid var(--border-glass); position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 10; }
+.main-content { margin-left: 240px; flex: 1; padding: 40px; background: radial-gradient(circle at top right, #0f172a, #020617); }
+
+/* Input Vault Styling */
+.analysis-input-vault {
+  display: flex; gap: 12px; background: var(--bg-card); padding: 20px; border-radius: 12px;
+  border: 1px solid var(--border-glass); margin-bottom: 2rem; backdrop-filter: blur(10px);
+}
+.cyber-input { flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: 6px; padding: 12px; color: white; font-family: 'JetBrains Mono', monospace; }
+
+/* Buttons - NO MORE EWW BUTTONS */
 .cyber-btn-primary {
-  background: var(--accent-cyan);
-  color: #000;
-  border: none;
-  padding: 0 24px;
-  border-radius: 8px;
-  font-weight: 900;
-  cursor: pointer;
-  box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
-  transition: transform 0.2s;
+  background: var(--neon-cyan); color: #000; border: none; padding: 0 24px; border-radius: 6px;
+  font-weight: 900; cursor: pointer; box-shadow: 0 0 15px rgba(0, 242, 255, 0.4); text-transform: uppercase;
 }
 
-.cyber-btn-primary:hover { transform: scale(1.05); }
-
-/* --- 3. THE RISK FEED (Glassmorphism) --- */
-.feed-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 20px;
+.cyber-btn-secondary {
+  background: transparent; color: var(--text-dim); border: 1px solid var(--border-glass);
+  padding: 8px 16px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;
+  cursor: pointer; letter-spacing: 1px; transition: 0.3s;
 }
+.cyber-btn-secondary:hover { border-color: var(--neon-cyan); color: white; }
 
+/* Cards & Feed */
 .premium-risk-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  padding: 1.5rem;
-  border-radius: 16px;
-  border: 1px solid var(--border-glass);
-  border-top: 4px solid var(--accent-cyan);
-  transition: all 0.3s ease;
+  background: var(--bg-card); border: 1px solid var(--border-glass); padding: 1.5rem;
+  border-radius: 12px; border-top: 4px solid var(--neon-cyan); margin-bottom: 1rem;
+}
+.empty-terminal {
+  text-align: center; padding: 60px; border: 1px dashed var(--border-glass);
+  border-radius: 12px; color: var(--text-dim); font-size: 0.8rem; letter-spacing: 2px;
 }
 
-.premium-risk-card:hover { transform: translateY(-5px); border-color: var(--accent-cyan); }
-.border-HIGH { border-top-color: var(--high-risk); }
-.border-MEDIUM { border-top-color: var(--med-risk); }
-.border-LOW { border-top-color: var(--low-risk); }
-
-.headline-text { font-size: 1.2rem; font-weight: 700; margin: 12px 0; color: #fff; }
-.logic-description { color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; }
-
-.status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.status-dot.processing { background: #ff9f43; box-shadow: 0 0 8px #ff9f43; animation: blink 1s infinite; }
 .status-dot.online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
-.status-dot.scanning { background: var(--accent-cyan); animation: blink 1s infinite; }
 
 @keyframes blink { 50% { opacity: 0.3; } }
