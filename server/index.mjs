@@ -118,6 +118,27 @@ app.post('/whistleblower', (req, res) => {
     caseID: `WB-SECURE-${Date.now()}` 
   });
 });
+// --- ON-DEMAND DECRYPT (SINGLE HEADLINE) ---
+app.post('/analyze', async (req, res) => {
+  const { headline } = req.body;
+  if (!headline) return res.status(400).json({ error: "Signal required" });
+
+  try {
+    const prompt = `Perform a high-level risk scan: "${headline}". 
+    JSON format: { "riskScore": number, "primaryImpact": "string", "mitigationStrategy": "string" }`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const cleanJson = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+
+    res.json({ 
+      success: true, 
+      analysis: JSON.parse(cleanJson) 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Decrypt Pipeline Interrupted" });
+  }
+});
 
 // --- 5. SERVER BINDING ---
 const PORT = process.env.PORT || 10000;
