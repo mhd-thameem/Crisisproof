@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
-// Enhanced Mock Regions - We can make these dynamic based on AI results later
 const INITIAL_REGIONS = [
   { name: 'Maharashtra', status: 'high' },
   { name: 'Gujarat', status: 'high' },
@@ -19,47 +18,56 @@ export default function Dashboard() {
   const [toast, setToast] = useState('');
   const [systemPulse, setSystemPulse] = useState('online');
 
+  const BASE_URL = 'https://crisisproof.onrender.com';
+
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
   };
 
-const analyze = async () => {
-  if (!headline.trim()) return;
-  setLoading(true);
-  try {
-    const res = await fetch('https://crisisproof.onrender.com/analyze-feed');
-    const data = await res.json();
-    
-    if (data.success && data.feed.length > 0) {
-      // Pick the first AI analysis from the feed to show in the big result box
-      setResult(data.feed[0].analysis); 
-      setFeed(data.feed);
-      setSystemPulse('online');
-    }
-  } catch (e) {
-    setSystemPulse('error');
-  }
-  setLoading(false);
-};
-
- const loadFeed = async () => {
-    setFeedLoading(true);
+  // 1. Single Headline Analysis (POST)
+  const analyze = async () => {
+    if (!headline.trim()) return;
+    setLoading(true);
+    setSystemPulse('processing');
     try {
-      // FIX: Corrected URL and changed method to GET to match your backend
-      const res = await fetch('https://crisisproof.onrender.com/analyze-feed');
+      const res = await fetch(`${BASE_URL}/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ headline }),
+      });
       const data = await res.json();
-      
       if (data.success) {
-        setFeed(data.feed); // FIX: Changed 'results' to 'feed'
-        showToast('Global Feed Decrypted');
+        setResult(data.analysis);
+        setFeed(prev => [{ headline, analysis: data.analysis }, ...prev]);
+        showToast('Gemini Intelligence Synced');
         setSystemPulse('online');
       }
     } catch (e) {
-      showToast('Satellite Feed Offline');
+      showToast('Neural Link Error');
       setSystemPulse('error');
+    } finally {
+      setLoading(false);
     }
-    setFeedLoading(false);
+  };
+
+  // 2. Global Feed Scan (GET)
+  const loadFeed = async () => {
+    setFeedLoading(true);
+    showToast('Staggered Scan Initiated (20s)...');
+    try {
+      // Changed to GET and /analyze-feed to match the backend logic
+      const res = await fetch(`${BASE_URL}/analyze-feed`);
+      const data = await res.json();
+      if (data.success) {
+        setFeed(data.data); // Mapping 'data' array from backend
+        showToast('Global Feed Decrypted');
+      }
+    } catch (e) {
+      showToast('Satellite Feed Offline');
+    } finally {
+      setFeedLoading(false);
+    }
   };
 
   const getSeverityColor = (s) => {
@@ -69,21 +77,18 @@ const analyze = async () => {
 
   return (
     <div className="dashboard-container">
-      {/* HEADER SECTION: Added System Status Pulse */}
       <div className="page-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <h2>Supply Chain Intelligence</h2>
             <p>Real-time disruption monitoring | <span className={`pulse-text ${systemPulse}`}>{systemPulse.toUpperCase()}</span></p>
           </div>
-          {/* Legend addition: Quick action status */}
           <div className="live-indicator">
             <span className="dot"></span> LIVE DATA STREAM
           </div>
         </div>
       </div>
 
-      {/* STATS GRID: Dynamic calculation from feed */}
       <div className="stats-grid">
         <div className={`stat-card ${feed.some(f => f.analysis?.severity === 'high') ? 'danger-glow' : ''}`}>
           <div className="label">Critical Disruptions</div>
@@ -94,7 +99,7 @@ const analyze = async () => {
           <div className="label">AI Confidence Avg</div>
           <div className="value">
             {feed.length > 0 
-              ? Math.round(feed.reduce((acc, curr) => acc + (curr.analysis?.confidence || 0), 0) / feed.length) 
+              ? Math.round(feed.reduce((acc, curr) => acc + (curr.analysis?.confidence || 0), 0) / feed.length * 100) 
               : 0}%
           </div>
           <div className="change">Gemini 3.1 Accuracy</div>
@@ -106,7 +111,6 @@ const analyze = async () => {
         </div>
       </div>
 
-      {/* MAIN ANALYSIS AREA */}
       <div className="card analyze-section main-glow">
         <div className="card-header">
           <div>
@@ -141,35 +145,21 @@ const analyze = async () => {
                 </div>
               </div>
               <div className="result-item">
-                <div className="rlabel">IMPACT WINDOW</div>
-                <div className="rvalue">{result.timeline}</div>
-              </div>
-              <div className="result-item">
-                <div className="rlabel">THREAT REASON</div>
-                <div className="rvalue" style={{ fontSize: '13px', lineHeight: '1.4' }}>{result.reason}</div>
+                <div className="rlabel">LOGIC ENGINE</div>
+                <div className="rvalue" style={{ fontSize: '13px', lineHeight: '1.4' }}>{result.logic || result.primaryImpact}</div>
               </div>
             </div>
             
             <div className="confidence-zone">
-              <div className="rlabel">AI CONFIDENCE SCORE: {result.confidence}%</div>
+              <div className="rlabel">AI CONFIDENCE SCORE: {Math.round(result.confidence * 100)}%</div>
               <div className="confidence-bar-container">
-                <div className="confidence-fill-glow" style={{ width: `${result.confidence}%`, backgroundColor: getSeverityColor(result.severity) }} />
+                <div className="confidence-fill-glow" style={{ width: `${result.confidence * 100}%`, backgroundColor: getSeverityColor(result.severity) }} />
               </div>
             </div>
-
-            {result.affectedRegions && (
-              <div className="regions-container">
-                <div className="rlabel">PREDICTED IMPACT ZONES:</div>
-                <div className="regions-list">
-                  {result.affectedRegions.map(r => <span key={r} className={`region-tag tag-${result.severity}`}>{r}</span>)}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
 
-      {/* FEED AND MAP SECTION */}
       <div className="grid-2">
         <div className="card glass-card">
           <div className="card-header">
@@ -191,7 +181,7 @@ const analyze = async () => {
                   <div className="disruption-meta">
                     <span className={`mini-badge ${item.analysis?.severity}`}>{item.analysis?.severity}</span>
                     <span className="meta-tag">{item.analysis?.commodity}</span>
-                    <span className="meta-tag-alt">{item.analysis?.confidence}% Match</span>
+                    <span className="meta-tag-alt">{Math.round(item.analysis?.confidence * 100)}% Match</span>
                   </div>
                 </div>
               ))
@@ -204,7 +194,6 @@ const analyze = async () => {
             <div className="card-title">Regional Risk Map</div>
           </div>
           <div className="map-viz">
-            {/* Visual enhancement: India Map with pulse dots */}
             <div className="map-placeholder-legendary">
                 <div className="map-overlay">
                     {INITIAL_REGIONS.filter(r => r.status === 'high').map(r => (
@@ -214,17 +203,6 @@ const analyze = async () => {
               <div className="map-icon">🇮🇳</div>
               <p>Supply Chain Heatmap</p>
             </div>
-          </div>
-          <div className="region-indicators">
-            {INITIAL_REGIONS.map(r => (
-              <div key={r.name} className="region-row">
-                <span className="region-name">{r.name}</span>
-                <div className="status-group">
-                  <span className={`status-label ${r.status}`}>{r.status}</span>
-                  <div className={`status-dot-inner ${r.status}`} />
-                </div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
