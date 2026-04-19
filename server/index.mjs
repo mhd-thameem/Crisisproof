@@ -1,119 +1,80 @@
-import express from 'express';
-import cors from 'cors';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import dotenv from 'dotenv';
+const express = require('express');
+const cors = require('cors');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+require('dotenv').config();
 
-// --- 1. CORE CONFIGURATION ---
-dotenv.config();
 const app = express();
-
-// High-compatibility CORS for Vercel <-> Render connection
-app.use(cors({ origin: '*' })); 
+app.use(cors());
 app.use(express.json());
 
-// --- 2. INTELLIGENCE LAYER ---
-// Initializing with the user-verified successful model [cite: 86]
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ 
-  model: "gemini-3.1-flash-lite-preview" 
-});
+const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
 
-// --- 3. IN-MEMORY DATA STORES ---
 const SAMPLE_HEADLINES = [
-  "Iran threats to close Strait of Hormuz amid escalating tensions",
-  "Major port labor strike in Mundra leads to logistics backlog",
-  "Red Sea instability forcing tankers into expensive re-routing",
-  "Unprecedented heatwave in North India spikes energy demand",
-  "Sudden palm oil export ban from Indonesia impacts local prices"
+  "Iran threatens to close Strait of Hormuz amid escalating US tensions",
+  "Houthi attacks on Red Sea shipping routes intensify, major carriers reroute",
+  "Russia halts fertilizer exports amid ongoing Ukraine conflict",
+  "Indonesia bans palm oil exports citing domestic shortage",
 ];
 
-let communityReports = [];
+app.post('/analyze', async (req, res) => {
+  try {
+    const { headline } = req.body;
+    const prompt = `You are a supply chain expert analyzing risks to India's essential commodity supply chain.
+Analyze this headline: "${headline}"
+Respond ONLY with valid JSON, no markdown, no explanation:
+{"isRisk":true,"commodity":"LPG","severity":"high","affectedRegions":["Maharashtra","Gujarat","Karnataka"],"timeline":"3-4 weeks","confidence":85,"reason":"brief explanation under 20 words","recommendedAction":"brief action under 15 words"}
+Rules: commodity must be one of: LPG, edible oil, fertilizer, fuel, medicine, none. severity must be: low, medium, high. confidence is 0-100.`;
 
-// --- 4. PRODUCTION ROUTES ---
-
-// A. Health Check (Always check this first!)
-app.get('/', (req, res) => {
-  res.json({ status: "online", engine: "CrisisProof Logic 1.0.7", auth: "Gemini-3.1-Verified" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text();
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const analysis = JSON.parse(text);
+    res.json({ success: true, headline, analysis });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
-// B. Dashboard Intelligence Feed [cite: 49, 51]
-app.get('/analyze-feed', async (req, res) => {
-  console.log("🚀 Starting Global Risk Scan...");
+app.post('/analyze-feed', async (req, res) => {
   try {
     const results = [];
     for (const headline of SAMPLE_HEADLINES) {
-      const prompt = `Evaluate supply chain risk for India: "${headline}". 
-      Output ONLY a JSON object: {"isRisk":true, "commodity":"fuel/food", "severity":"high/medium/low", "logic":"max 15 words", "impactedPort":"string", "confidence":0.95}`;
-
+      const prompt = `You are a supply chain expert. Analyze: "${headline}"
+Respond ONLY with valid JSON:
+{"isRisk":true,"commodity":"LPG","severity":"high","affectedRegions":["Maharashtra","Gujarat"],"timeline":"3-4 weeks","confidence":85,"reason":"brief reason","recommendedAction":"brief action"}
+commodity options: LPG, edible oil, fertilizer, fuel, medicine, none. severity: low, medium, high.`;
       const result = await model.generateContent(prompt);
-      const text = result.response.text();
-      
-      // Robust JSON Extraction (prevents crashes from AI 'chatter')
-      const cleanJson = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-      
-      results.push({
-        headline,
-        analysis: JSON.parse(cleanJson),
-        timestamp: new Date().toISOString()
-      });
-
-      // 2.5-second stagger to prevent 503 Service Unavailable errors
-      await new Promise(r => setTimeout(r, 2500)); 
+      const response = await result.response;
+      let text = response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+      const analysis = JSON.parse(text);
+      results.push({ headline, analysis });
+      await new Promise(r => setTimeout(r, 1000));
     }
-    res.json({ success: true, count: results.length, data: results });
+    res.json({ success: true, results });
   } catch (error) {
-    console.error("Feed Error:", error.message);
-    res.status(500).json({ success: false, error: "AI Pipeline Saturated" });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// C. On-Demand Decrypt (Single Headline Analysis) [cite: 31, 40]
-app.post('/analyze', async (req, res) => {
-  const { headline } = req.body;
-  if (!headline) return res.status(400).json({ error: "Signal input required." });
-
+app.post('/community-report', async (req, res) => {
   try {
-    const prompt = `Deep scan headline: "${headline}". 
-    JSON: { "riskScore": number, "primaryImpact": "string", "mitigationStrategy": "string" }`;
-
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    const cleanJson = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-
-    res.json({ success: true, analysis: JSON.parse(cleanJson) });
+    const { report, region, commodity } = req.body;
+    res.json({ success: true, id: Date.now(), report, region, commodity, upvotes: 0, timestamp: new Date().toISOString() });
   } catch (error) {
-    res.status(500).json({ success: false, error: "Decrypt Failure" });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// D. Community Intelligence (HUMINT) [cite: 56, 59]
-app.post('/community-report', (req, res) => {
-  const { report, region, commodity, severity } = req.body;
-  const newReport = {
-    id: `SIG-${Date.now()}`,
-    report, region, commodity,
-    severity: severity || "medium",
-    timestamp: new Date().toISOString()
-  };
-  communityReports.push(newReport);
-  res.status(201).json({ success: true, report: newReport });
+app.post('/whistleblower', async (req, res) => {
+  try {
+    const { category, description } = req.body;
+    res.json({ success: true, id: Date.now(), category, status: 'received', timestamp: new Date().toISOString() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
-app.get('/community-reports', (req, res) => {
-  res.json({ success: true, reports: communityReports });
-});
-
-// E. Secure Whistleblower Gateway [cite: 66, 69]
-app.post('/whistleblower', (req, res) => {
-  res.json({ 
-    success: true, 
-    status: "Zero-Trace Encryption Active", 
-    caseID: `WB-${Math.random().toString(36).substring(7).toUpperCase()}` 
-  });
-});
-
-// --- 5. SERVER BINDING ---
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`📡 CrisisProof Backend initialized on port ${PORT}`);
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`CrisisProof backend running on port ${PORT}`));
