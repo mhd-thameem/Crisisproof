@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const SUPPLIERS = [
-  { name: 'Indian Oil Corporation', commodity: 'LPG', region: 'Pan India', reliability: 94, price: 'Market rate', contact: 'iocl.com' },
-  { name: 'Bharat Petroleum', commodity: 'LPG', region: 'South India', reliability: 91, price: 'Market rate', contact: 'bharatpetroleum.in' },
-  { name: 'Hindustan Petroleum', commodity: 'LPG', region: 'West India', reliability: 89, price: 'Market rate', contact: 'hindustanpetroleum.com' },
-  { name: 'Adani Gas', commodity: 'LPG', region: 'Gujarat', reliability: 87, price: '-3% below market', contact: 'adanigas.in' },
+  { name: 'Indian Oil Corporation', commodity: 'LPG', region: 'Pan India', reliability: 94, price: 'Market rate' },
+  { name: 'Bharat Petroleum', commodity: 'LPG', region: 'South India', reliability: 91, price: 'Market rate' },
+  { name: 'Hindustan Petroleum', commodity: 'LPG', region: 'West India', reliability: 89, price: 'Market rate' },
+  { name: 'Adani Gas', commodity: 'LPG', region: 'Gujarat', reliability: 87, price: '-3% below market' },
 ];
 
 export default function PreOrder() {
@@ -12,159 +12,114 @@ export default function PreOrder() {
   const [region, setRegion] = useState('Karnataka');
   const [ordered, setOrdered] = useState({});
   const [toast, setToast] = useState('');
-  const [marketRisk, setMarketRisk] = useState({ 
-    commodity: 'LPG', 
-    confidence: 85, 
-    reason: 'Hormuz tension detected. Predicted impact in 3-4 weeks.' 
-  });
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
 
-  // Legendary feature: Calculate dynamic savings based on quantity
-  const calculateSavings = () => {
-    const basePrice = 900; // Estimated per unit
-    const projectedShortageSpike = 1.35; // 35% increase
-    const savings = quantity * (basePrice * projectedShortageSpike - basePrice);
-    return Math.round(savings).toLocaleString();
-  };
-
   const placeOrder = (supplier) => {
     setOrdered({ ...ordered, [supplier.name]: true });
-    showToast(`Order Secured: Tracking ref #${Math.floor(Math.random() * 900000)}`);
+    showToast(`Pre-order request sent to ${supplier.name}`);
   };
 
   return (
-    <div className="preorder-container anim-fade-in">
+    <div>
       <div className="page-header">
-        <div className="flex-between">
+        <h2>Pre-Order Hub</h2>
+        <p>Lock in commodity orders before shortage hits your region</p>
+      </div>
+
+      <div className="card" style={{marginBottom:'24px', background:'#0F1D1F', border:'1px solid #10B98130'}}>
+        <div style={{display:'flex', alignItems:'center', gap:'16px'}}>
+          <div style={{fontSize:'32px'}}>⚠️</div>
           <div>
-            <h2>Pre-Order Hub</h2>
-            <p>Strategic Procurement & Price Protection</p>
+            <div style={{color:'#F59E0B', fontWeight:'600', marginBottom:'4px'}}>Active Shortage Alert — LPG</div>
+            <div style={{color:'#64748B', fontSize:'13px'}}>Hormuz tension detected. Predicted impact in 3-4 weeks. Pre-order now to secure supply at current prices.</div>
           </div>
-          <div className="security-tag">
-            <span className="shield-icon">🛡️</span> SECURE GATEWAY
-          </div>
-        </div>
-      </div>
-
-      {/* DYNAMIC ALERT BANNER */}
-      <div className="alert-banner-legendary">
-        <div className="alert-pulse-icon">⚠️</div>
-        <div className="alert-content">
-          <div className="alert-title">AI SHORTAGE PREDICTION: {marketRisk.commodity}</div>
-          <div className="alert-desc">{marketRisk.reason}</div>
-        </div>
-        <div className="alert-stat">
-          <div className="stat-val">{marketRisk.confidence}%</div>
-          <div className="stat-label">AI CONFIDENCE</div>
-        </div>
-        <div className="alert-action">
-          <button className="btn-mini" onClick={() => showToast("Contract auto-fill active")}>LOCK PRICE</button>
-        </div>
-      </div>
-
-      <div className="grid-2">
-        {/* CONFIGURATION CARD */}
-        <div className="card glass-card-dark">
-          <div className="card-header-icon">
-            <span className="title-icon">⚙️</span>
-            <h3>Configure Strategic Order</h3>
-          </div>
-          
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Delivery Region</label>
-              <select className="modern-select" value={region} onChange={e => setRegion(e.target.value)}>
-                <option>Karnataka</option>
-                <option>Maharashtra</option>
-                <option>Gujarat</option>
-                <option>Tamil Nadu</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Quantity (Standard Units)</label>
-              <input
-                className="modern-input-large"
-                type="number"
-                value={quantity}
-                onChange={e => setQuantity(e.target.value)}
-                min="10"
-              />
-            </div>
-          </div>
-
-          <div className="savings-projection-card">
-            <div className="projection-row">
-              <span className="proj-label">Estimated Price Protection Savings</span>
-              <span className="proj-val highlight-green">₹{calculateSavings()}</span>
-            </div>
-            <div className="projection-row">
-              <span className="proj-label">Priority Allocation Window</span>
-              <span className="proj-val">45 Days</span>
-            </div>
-            <div className="projection-bar">
-              <div className="projection-fill" style={{width: '75%'}}></div>
-            </div>
-            <p className="projection-footer">Calculated by Gemini Economic Model 3.1</p>
-          </div>
-        </div>
-
-        {/* WHY PRE-ORDER (Value Props) */}
-        <div className="card info-card">
-          <h3>Pre-Order Advantages</h3>
-          <div className="advantage-list">
-            {[
-              { icon: '🔒', title: 'Hedge Against Inflation', desc: 'Lock in rates before the 35% projected spike.' },
-              { icon: '⏰', title: 'Queue Priority', desc: 'Strategic reserves are allocated to early responders first.' },
-              { icon: '🤝', title: 'Verified PSU Network', desc: 'Direct linkage to government-authorized distributors.' },
-            ].map(item => (
-              <div key={item.title} className="advantage-item">
-                <div className="adv-icon">{item.icon}</div>
-                <div className="adv-text">
-                  <div className="adv-title">{item.title}</div>
-                  <div className="adv-desc">{item.desc}</div>
-                </div>
-              </div>
-            ))}
+          <div style={{marginLeft:'auto', textAlign:'right'}}>
+            <div style={{color:'#EF4444', fontSize:'24px', fontWeight:'700'}}>85%</div>
+            <div style={{color:'#64748B', fontSize:'11px'}}>Confidence</div>
           </div>
         </div>
       </div>
 
-      {/* SUPPLIER LISTING */}
-      <div className="card supplier-section">
-        <div className="card-header flex-between">
-          <h3>Qualified Suppliers for {region}</h3>
-          <span className="status-pill-blue">AI-VERIFIED NETWORK</span>
+      <div className="grid-2" style={{marginBottom:'24px'}}>
+        <div className="card">
+          <div className="card-title" style={{marginBottom:'16px'}}>Configure Pre-Order</div>
+          <div className="form-group">
+            <label>Your Region</label>
+            <select value={region} onChange={e => setRegion(e.target.value)}>
+              <option>Karnataka</option>
+              <option>Maharashtra</option>
+              <option>Gujarat</option>
+              <option>Tamil Nadu</option>
+              <option>Rajasthan</option>
+              <option>Punjab</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Quantity (cylinders)</label>
+            <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} min="10" max="10000" />
+          </div>
+          <div style={{background:'#0F1D30', borderRadius:'10px', padding:'14px', marginTop:'8px'}}>
+            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'8px'}}>
+              <span style={{color:'#64748B', fontSize:'13px'}}>Estimated savings vs shortage price</span>
+              <span style={{color:'#10B981', fontWeight:'600'}}>~₹{(quantity * 47).toLocaleString()}</span>
+            </div>
+            <div style={{display:'flex', justifyContent:'space-between'}}>
+              <span style={{color:'#64748B', fontSize:'13px'}}>Protection window</span>
+              <span style={{color:'#3B82F6', fontWeight:'600'}}>45 days</span>
+            </div>
+          </div>
         </div>
 
-        <div className="supplier-grid">
-          {SUPPLIERS.map(supplier => (
-            <div key={supplier.name} className={`supplier-card ${ordered[supplier.name] ? 'ordered' : ''}`}>
-              <div className="sup-info">
-                <div className="sup-name">{supplier.name}</div>
-                <div className="sup-meta">
-                  <span className="sup-tag">{supplier.region}</span>
-                  <span className="sup-tag price">{supplier.price}</span>
-                </div>
-                <div className="reliability-meter">
-                  <div className="meter-label">Reliability: {supplier.reliability}%</div>
-                  <div className="meter-track">
-                    <div className="meter-fill" style={{width: `${supplier.reliability}%`}}></div>
-                  </div>
-                </div>
-              </div>
-              <div className="sup-action">
-                {ordered[supplier.name] ? (
-                  <button className="btn-success" disabled>✓ SECURED</button>
-                ) : (
-                  <button className="btn btn-primary" onClick={() => placeOrder(supplier)}>RESERVE SUPPLY</button>
-                )}
+        <div className="card">
+          <div className="card-title" style={{marginBottom:'16px'}}>Why Pre-Order Now?</div>
+          {[
+            { icon: '🔒', title: 'Lock current prices', desc: 'Shortage typically causes 30-40% price spike' },
+            { icon: '⏰', title: '5-6 week advantage', desc: 'Act before street-level shortage hits' },
+            { icon: '🤝', title: 'Verified suppliers only', desc: 'All suppliers are PSU authorized distributors' },
+            { icon: '❌', title: 'Cancel anytime', desc: 'Pre-order is not binding until confirmed' },
+          ].map(item => (
+            <div key={item.title} style={{display:'flex', gap:'12px', marginBottom:'14px', alignItems:'flex-start'}}>
+              <span style={{fontSize:'20px'}}>{item.icon}</span>
+              <div>
+                <div style={{fontSize:'13px', fontWeight:'600', color:'#F1F5F9', marginBottom:'2px'}}>{item.title}</div>
+                <div style={{fontSize:'12px', color:'#64748B'}}>{item.desc}</div>
               </div>
             </div>
           ))}
         </div>
       </div>
-      {toast && <div className="toast-notification">{toast}</div>}
+
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Available Suppliers</div>
+          <span className="badge badge-blue">AI Matched for {region}</span>
+        </div>
+        {SUPPLIERS.map(supplier => (
+          <div key={supplier.name} style={{background:'#0F1D30', borderRadius:'12px', padding:'16px', marginBottom:'12px', display:'flex', alignItems:'center', gap:'16px'}}>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:'600', color:'#F1F5F9', marginBottom:'4px'}}>{supplier.name}</div>
+              <div style={{display:'flex', gap:'8px', flexWrap:'wrap'}}>
+                <span className="meta-tag">{supplier.region}</span>
+                <span className="meta-tag">{supplier.price}</span>
+                <span style={{fontSize:'11px', color:'#10B981'}}>⭐ {supplier.reliability}% reliability</span>
+              </div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:'12px', color:'#64748B', marginBottom:'8px'}}>{quantity} cylinders</div>
+              {ordered[supplier.name] ? (
+                <span className="badge badge-low">✓ Requested</span>
+              ) : (
+                <button className="btn btn-primary" style={{padding:'8px 16px', fontSize:'13px'}} onClick={() => placeOrder(supplier)}>
+                  Pre-Order
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {toast && <div className="toast">{toast}</div>}
     </div>
   );
 }
