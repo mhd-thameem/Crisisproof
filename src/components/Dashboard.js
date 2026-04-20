@@ -142,7 +142,7 @@ export default function Dashboard() {
               </div>
               <div className="result-item">
                 <div className="rlabel">Confidence</div>
-                <div className="rvalue">{result.confidence}%</div>
+                <div className="rvalue">{result.confidence > 1 ? result.confidence : Math.round(result.confidence * 100)}%</div>
               </div>
               <div className="result-item" style={{gridColumn:'2 / -1'}}>
                 <div className="rlabel">Recommended Action</div>
