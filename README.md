@@ -1,70 +1,51 @@
-# Getting Started with Create React App
+🛡️ CrisisProof: Securing the Supply, Saving the Community
+Bridging the 5-week intelligence gap from Crisis to Clarity.
+CrisisProof is an AI-powered supply chain intelligence terminal designed to prevent humanitarian disasters during global volatility. By combining top-down geopolitical analysis with bottom-up community ground truth, we provide the clarity needed to avoid deadly resource shortages.
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+🚀 The Mission
+During the 2026 supply chain crisis, a lethal information vacuum led to five-week delays in identifying critical shortages. CrisisProof closes this gap by turning chaotic global signals into actionable local data.
 
-## Available Scripts
+🧠 Key Features
+Gemini AI Analysis Engine: Utilizes Gemini 3.1 Flash-Lite and the Google Generative AI SDK to parse raw geopolitical headlines for immediate risk extraction.
 
-In the project directory, you can run:
+Community Intel Loop: A "Human-in-the-Loop" validation system where retailers in regions like Sullia and Mundra provide real-time stock reports to verify AI predictions.
 
-### `npm start`
+Whistleblower Space: A secure, anonymous portal for port insiders and logistics workers to report supply diversions and port delays before they hit mainstream news.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Dynamic Risk Dashboard: Features a high-tech interface—anchored by our neon-cyan digital pulse—that maps global disruptions to regional status across India.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+🛠️ Technical Stack
+Frontend: React (Optimized for high-visibility data dashboards).
 
-### `npm test`
+Backend: Node.js.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Intelligence: Google Generative AI SDK (Gemini 3.1 Flash-Lite).
 
-### `npm run build`
+Deployment: Hosted on Vercel and Render.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+⚙️ Getting Started
+Prerequisites
+Node.js (v18+)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+A Google Gemini API Key
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Installation
+Clone the repository:
 
-### `npm run eject`
+Bash
+git clone https://github.com/mhd-thameem/Crisisproof.git
+Install dependencies:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Bash
+npm install
+Environment Setup:
+Create a .env file in the root directory and add your credentials:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Code snippet
+REACT_APP_GEMINI_API_KEY=your_api_key_here
+Start the Terminal:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Bash
+npm start
+📊 Impact & Recognition
+Developed for the 2026 Google Solution Challenge, CrisisProof aims to protect vulnerable populations by ensuring essential commodities like LPG and fuel reach the communities that need them most, precisely when they need them.
